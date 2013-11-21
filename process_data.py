@@ -1,4 +1,4 @@
-import sys
+import sys, csv
 from sqlite3 import dbapi2 as sqlite3
 
 class Database:
@@ -28,18 +28,18 @@ class Database:
         return name.replace(' ', '_').replace(')', '_').replace(')', '_').lower()
 
 def splitrow(row):
-    parts = row.split(',')
 
     return {
-        'name' : parts[0].replace('"', '').strip(),
-        'alpha' : parts[1].strip(),
-        'alts' : parts[2].strip(),
-        'description' : parts[3].strip(),
+        'name' : row[0].replace('"', '').strip(),
+        'alpha' : row[1].replace('"', '').strip(),
+        'alts' : row[2].replace('"', '').strip(),
+        'description' : row[3].replace('"', '').strip(),
     }
 
 f = open(sys.argv[1])
-
-for line in f:
-    print splitrow(line)
+csvreader = csv.reader(f)
 db = Database()
-print db.get_hop_id_by_name('Warrior')
+
+for line in csvreader:
+    hop = splitrow(line)
+    hop_id = db.insert_hop(hop['name'], hop['alpha'], hop['description'])
