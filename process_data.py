@@ -1,4 +1,4 @@
-import sys, csv
+import sys, csv, codecs
 from sqlite3 import dbapi2 as sqlite3
 
 class Database:
@@ -25,7 +25,19 @@ class Database:
         return hop_id[0][0]
 
     def create_websafe(self, name):
-        return name.replace(' ', '_').replace(')', '_').replace(')', '_').lower()
+        return name.replace(' ', '_').replace(')', '_').replace('(', '_').lower()
+
+def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
+    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
+    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
+                            dialect=dialect, **kwargs)
+    for row in csv_reader:
+        # decode UTF-8 back to Unicode, cell by cell:
+        yield [unicode(cell, 'utf-8') for cell in row]
+
+def utf_8_encoder(unicode_csv_data):
+    for line in unicode_csv_data:
+        yield line.encode('utf-8')
 
 def splitrow(row):
 
@@ -36,8 +48,8 @@ def splitrow(row):
         'description' : row[3].replace('"', '').strip(),
     }
 
-f = open(sys.argv[1])
-csvreader = csv.reader(f)
+f = codecs.open(sys.argv[1], 'r', 'utf-8')
+csvreader = unicode_csv_reader(f)
 db = Database()
 
 for line in csvreader:
